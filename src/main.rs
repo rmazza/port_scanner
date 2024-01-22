@@ -4,12 +4,12 @@ use std::time::Duration;
 use rayon::prelude::*;
 use rayon::ThreadPoolBuilder;
 
-/// Search for a pattern in a file and display the lines that contain it.
+/// Network port scanner
 #[derive(Parser)]
 struct Cli {
     /// host ip to connect to
-    #[arg(short, long)]
-    ip: String,
+    #[arg(short = 'H', long)]
+    host: String,
     /// port to check
     #[arg(short, long, default_value = "-1")]
     port: String,
@@ -20,7 +20,7 @@ struct Cli {
 
 impl Cli {
     fn url(&self) -> String {
-        format!("{}:{}", self.ip, self.port)
+        format!("{}:{}", self.host, self.port)
     }
 }
 
@@ -37,15 +37,15 @@ fn main() {
         let pool = ThreadPoolBuilder::new().num_threads(num_threads).build().unwrap();
         pool.install(|| {
             (1..=65535).into_par_iter().for_each(|i| {
-                check_if_open(format!("{}:{}", args.ip, i))
+                scan(format!("{}:{}", args.host, i))
             });
         });
     } else {
-        check_if_open(args.url());
+        scan(args.url());
     }
 }
 
-fn check_if_open(address: String) {
+fn scan(address: String) {
     let addrs = match address.to_socket_addrs() {
         Ok(addrs) => addrs,
         Err(e) => {
